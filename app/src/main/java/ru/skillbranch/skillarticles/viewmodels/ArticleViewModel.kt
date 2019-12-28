@@ -28,7 +28,7 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
         subscribeOnDataSource(getArticleContent()) { content, state ->
             content ?: return@subscribeOnDataSource null
             state.copy(
-                isLoadingContent = false,
+                isLoadingContent = true,
                 content = content
             )
         }
@@ -42,6 +42,7 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
         }
 
         subscribeOnDataSource(repository.getAppSettings()){ settings, state ->
+            Log.wtf("ArticleViewModel","${settings.isDarkMode} ")
             state.copy(
                 isDarkMode = settings.isDarkMode,
                 isBigText = settings.isBigText
@@ -96,6 +97,23 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
     }
 
     fun handleBookmark() {
+        val toggleBookmark = {
+            val info = currentState.toArticlePersonalInfo()
+            repository.updateArticlePersonalInfo(info.copy(isBookmark = !info.isBookmark))
+        }
+
+        toggleBookmark()
+
+        val msg = if(currentState.isLike) Notify.TextMessage("Add to bookmarks")
+        else {
+            Notify.ActionMessage(
+                "Add to bookmarks",
+                "No, still in bookmark it",
+                toggleBookmark
+            )
+        }
+
+        notify(msg)
 
     }
 
@@ -106,8 +124,13 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
 
     fun handleToggleMenu() {
         updateState{
-            Log.wtf("ArticleViewModel","handleToggleMenu ${it.isShowMenu}")
             it.copy(isShowMenu = !it.isShowMenu)
+        }
+    }
+
+    fun handleSearchAction(isOpen: Boolean) {
+        updateState {
+            it.copy(isSearch = isOpen)
         }
     }
 
