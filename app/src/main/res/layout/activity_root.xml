@@ -48,6 +48,8 @@
         android:elevation="8dp"
         android:theme="@style/ArticleBarsTheme"
         app:layout_dodgeInsetEdges="bottom"
+        android:visibility="gone"
+        tools:visibility="visible"
         />
 
     <ru.skillbranch.skillarticles.ui.custom.Bottombar

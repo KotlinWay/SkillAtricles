@@ -17,6 +17,7 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
         subscribeOnDataSource(getArticleData()){ article, state ->
             article ?: return@subscribeOnDataSource null
             state.copy(
+                author = article.author,
                 shareLink = article.shareLink,
                 title = article.title,
                 category = article.category,
@@ -28,7 +29,7 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
         subscribeOnDataSource(getArticleContent()) { content, state ->
             content ?: return@subscribeOnDataSource null
             state.copy(
-                isLoadingContent = true,
+                isLoadingContent = false,
                 content = content
             )
         }
@@ -87,7 +88,7 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
         val msg = if(currentState.isLike) Notify.TextMessage("Mark is liked")
         else {
             Notify.ActionMessage(
-                "Don't like it anymore",
+                "Don`t like it anymore",
                 "No, still like it",
                 toggleLike
             )
@@ -104,10 +105,10 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
 
         toggleBookmark()
 
-        val msg = if(currentState.isLike) Notify.TextMessage("Add to bookmarks")
+        val msg = if(currentState.isBookmark) Notify.TextMessage("Add to bookmarks")
         else {
             Notify.ActionMessage(
-                "Add to bookmarks",
+                "Remove from bookmarks",
                 "No, still in bookmark it",
                 toggleBookmark
             )
@@ -129,9 +130,16 @@ class ArticleViewModel(private val articleId: String) : BaseViewModel<ArticleSta
     }
 
     fun handleSearchAction(isOpen: Boolean) {
-        updateState {
-            it.copy(isSearch = isOpen)
+        if(isOpen){
+            updateState {
+                it.copy(isSearch = isOpen, searchQuery = null)
+            }
+        } else {
+            updateState {
+                it.copy(isSearch = isOpen)
+            }
         }
+
     }
 
 }

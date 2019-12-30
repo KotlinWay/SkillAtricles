@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
+import android.widget.SearchView
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProviders
@@ -47,14 +48,29 @@ class RootActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
         val searchItem = menu?.findItem(R.id.action_search)
+//        val searchView = searchItem?.actionView as SearchView
+//        searchView.setQuery(viewModel.currentState.searchQuery, false)
+//        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+//            override fun onQueryTextSubmit(query: String?): Boolean {
+//                Log.wtf("RootActivity", "onQueryTextSubmit $query")
+//                return true
+//            }
+//
+//            override fun onQueryTextChange(newText: String?): Boolean {
+//                Log.wtf("RootActivity", "onQueryTextChange $newText")
+//                return true
+//            }
+//
+//        })
 
-        if(viewModel.currentState.isSearch){
+        if (viewModel.currentState.isSearch) {
             searchItem?.expandActionView()
         } else {
             searchItem?.collapseActionView()
         }
 
         searchItem?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 viewModel.handleSearchAction(isOpen = true)
                 return true
@@ -65,7 +81,10 @@ class RootActivity : AppCompatActivity() {
                 return true
             }
 
+
         })
+
+
         return super.onCreateOptionsMenu(menu)
     }
 
