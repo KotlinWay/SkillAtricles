@@ -11,10 +11,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
-import android.widget.SearchView
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.text.getSpans
 import androidx.core.view.isVisible
@@ -118,7 +118,7 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         val searchItem = menu?.findItem(R.id.action_search)
         val searchView = (searchItem?.actionView as? SearchView)
         searchView?.queryHint = getString(R.string.article_search_placeholder)
-
+Log.wtf("RootActivity","onCreateOptionsMenu $searchView")
         if (binding.isSearch) {
             searchItem?.expandActionView()
             searchView?.setQuery(binding.searchQuery, false)
@@ -142,11 +142,13 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
 
         searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
+                Log.wtf("RootActivity","onQueryTextSubmit $query")
                 viewModel.handleSearch(query)
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
+                Log.wtf("RootActivity","onQueryTextChange $newText")
                 viewModel.handleSearch(query = newText)
                 return true
             }
@@ -197,12 +199,12 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         btn_settings.setOnClickListener { viewModel.handleToggleMenu() }
 
         btn_result_up.setOnClickListener {
-            if (search_view.hasFocus()) search_view.clearFocus()
+            if (search_view?.hasFocus() ?: false) search_view.clearFocus()
             viewModel.handleUpResult()
         }
 
         btn_result_down.setOnClickListener {
-            if (search_view.hasFocus()) search_view.clearFocus()
+            if (search_view?.hasFocus() ?: false) search_view.clearFocus()
             viewModel.handleDownResult()
         }
 
