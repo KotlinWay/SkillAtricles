@@ -24,7 +24,7 @@ class ArticleSubmenu @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyleAttr), CoordinatorLayout.AttachedBehavior {
     var isOpen = false
     get() {
-        Log.wtf("ArticleSubmenu","$field ")
+        Log.wtf("ArticleSubmenu"," get field isOpen = $field ")
         return field
     }
     private var centerX: Float = context.dpToPx(200)
@@ -73,6 +73,7 @@ class ArticleSubmenu @JvmOverloads constructor(
     }
 
     private fun animatedHide() {
+        Log.wtf("ArticleSubmenu","animatedHide ")
         val endRadius = hypot(centerX, centerY).toInt()
         val anim = ViewAnimationUtils.createCircularReveal(
             this,

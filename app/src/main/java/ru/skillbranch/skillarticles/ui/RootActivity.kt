@@ -51,9 +51,9 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     override val binding: ArticleBinding by lazy { ArticleBinding() }
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private val bgColor by AttrValue(R.attr.colorSecondary)
+    val bgColor by AttrValue(R.attr.colorSecondary)
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private val fgColor by AttrValue(R.attr.colorOnSecondary)
+    val fgColor by AttrValue(R.attr.colorOnSecondary)
 
     override fun setupViews() {
         setupToolbar()
@@ -198,12 +198,12 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         btn_settings.setOnClickListener { viewModel.handleToggleMenu() }
 
         btn_result_up.setOnClickListener {
-            if (search_view?.hasFocus() ?: false) search_view.clearFocus()
+            if (search_view.hasFocus()) search_view.clearFocus()
             viewModel.handleUpResult()
         }
 
         btn_result_down.setOnClickListener {
-            if (search_view?.hasFocus() ?: false) search_view.clearFocus()
+            if (search_view.hasFocus()) search_view.clearFocus()
             viewModel.handleDownResult()
         }
 

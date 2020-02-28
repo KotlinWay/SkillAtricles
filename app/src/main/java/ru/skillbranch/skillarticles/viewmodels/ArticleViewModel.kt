@@ -163,12 +163,12 @@ class ArticleViewModel(private val articleId: String) :
         updateState { it.copy(searchQuery = query, searchResults = result, searchPosition = 0) }
     }
 
-    fun handleDownResult() {
-        updateState { it.copy(searchPosition = it.searchPosition.inc()) }
-    }
-
     fun handleUpResult() {
         updateState { it.copy(searchPosition = it.searchPosition.dec()) }
+    }
+
+    fun handleDownResult() {
+        updateState { it.copy(searchPosition = it.searchPosition.inc()) }
     }
 
 }
