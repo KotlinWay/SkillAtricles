@@ -55,6 +55,7 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val fgColor by AttrValue(R.attr.colorOnSecondary)
 
+
     override fun setupViews() {
         setupToolbar()
         setupBottombar()
