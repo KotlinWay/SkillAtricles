@@ -1,10 +1,17 @@
 package ru.skillbranch.skillarticles.extensions
 
 import android.content.Context
+import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.TypedValue
+
+fun Context.attrValue(attr:Int): Int {
+    val tv = TypedValue()
+    return if(this.theme.resolveAttribute(attr, tv, true)) tv.data
+    else throw Resources.NotFoundException("Resource with id $attr not found")
+}
 
 fun Context.dpToPx(dp: Int): Float {
     return TypedValue.applyDimension(
