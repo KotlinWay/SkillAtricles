@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.TypedValue
+import kotlin.math.hypot
 
 fun Context.attrValue(attr:Int): Int {
     val tv = TypedValue()
@@ -14,11 +15,15 @@ fun Context.attrValue(attr:Int): Int {
 }
 
 fun Context.dpToPx(dp: Int): Float {
+
+
+
+
+
     return TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         dp.toFloat(),
         this.resources.displayMetrics
-
     )
 }
 

@@ -10,6 +10,7 @@ import android.view.ViewAnimationUtils
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.animation.doOnEnd
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import com.google.android.material.shape.MaterialShapeDrawable
 import kotlinx.android.synthetic.main.layout_bottombar.view.*
@@ -89,6 +90,7 @@ class Bottombar @JvmOverloads constructor(
     }
 
     fun bindSearchInfo(searchCount: Int = 0, position: Int = 0) {
+
         if (searchCount == 0) {
             tv_search_result.text = "Not found"
             btn_result_up.isEnabled = false
@@ -99,7 +101,10 @@ class Bottombar @JvmOverloads constructor(
             btn_result_down.isEnabled = true
         }
 
-        //lock button presses in min/max positions
+//        if(position == 0) btn_result_up.isEnabled  = false
+//        if(position == searchCount -1) btn_result_down.isEnabled = false
+
+//        lock button presses in min/max positions
         when(position){
             0 -> btn_result_up.isEnabled = false
 //            1 -> {

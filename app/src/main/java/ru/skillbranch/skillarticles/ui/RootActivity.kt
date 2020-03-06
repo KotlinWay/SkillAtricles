@@ -87,6 +87,11 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         content.getSpans<SearchFocusSpan>().forEach { content.removeSpan(it) }
         if (spans.isNotEmpty()) {
             val result = spans[searchPosition]
+//            val result = if(searchPosition > spans.size-1) {
+//                spans[searchPosition.dec()]
+//            } else {
+//                spans[searchPosition]
+//            }
             Selection.setSelection(content, content.getSpanStart(result))
             content.setSpan(
                 SearchFocusSpan(bgColor, fgColor),
@@ -307,7 +312,7 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
             if (data.title != null) title = data.title
             if (data.category != null) category = data.category
             if (data.categoryIcon != null) categoryIcon = data.categoryIcon as Int
-            if (data.content.isNotEmpty()) content = data.content.first() as String
+            if (data.content != null) content = data.content
 
             isLoadingContent = data.isLoadingContent
             isSearch = data.isSearch
