@@ -10,9 +10,9 @@ object MarkdownParser {
     private const val UNORDERED_LIST_ITEM_GROUP = "(^[*+-] .+$)"
     private const val HEADER_GROUP = "(^#{1,6} .+?$)"
     private const val QUOTE_GROUP = "(^> .+?$)"
-    private const val ITALIC_GROUP = "((?<!\\*)\\*[^*].*?[^*]?\\*(?!\\*)|(?<!_)_[^_].*?[^_]?_(?!+))"
-    private const val BOLD_GROUP ="((?<!\\*)\\*{2}[^*].*?[^*]?\\*{2}(?!\\*)|(?<!+)+{2}[^+].*?[^_]?_{2}(?!+))"
-    private const val STRIKE_GROUP = "implement me"
+    private const val ITALIC_GROUP = "((?<!\\*)\\*[^*].*?[^*]?\\*(?!\\*)|(?<!_)_[^_].*?[^_]?_(?!_))"
+    private const val BOLD_GROUP ="((?<!\\*)\\*{2}[^*].*?[^*]?\\*{2}(?!\\*)|(?<!_)_{2}[^_].*?[^_]?_{2}(?!_))"
+    private const val STRIKE_GROUP = "((?<!\\~)\\~{2}[^\\~].*?[^\\~]?\\~{2}(?!\\~))"
     private const val RULE_GROUP = "(^[-_*]{3}$)"
     private const val INLINE_GROUP = "((?<!`)`[^`\\s].*?[^`\\s]?`(?!`))"
     private const val LINK_GROUP = "(\\[[^\\[\\]]*?]\\(.+?\\)|^\\[*?]\\(.*?\\))"
@@ -39,7 +39,7 @@ object MarkdownParser {
      * clear markdown text to string without markdown characters
      */
     fun clear(string: String?): String? {
-        return null
+        return findElements(string.toString()).spread().joinToString()
     }
 
     /**
@@ -63,7 +63,9 @@ object MarkdownParser {
             val groups = 1..11
             var group = -1
             for(gr in groups){
-                if(matcher.group(gr) != null){
+
+                val matcherGroup = matcher.group(gr)
+                if(matcherGroup != null){
                     group = gr
                     break
                 }
@@ -151,7 +153,7 @@ object MarkdownParser {
                 //INLINE CODE
                 8 -> {
                     //text without "`{}`"
-                    text = string.subSequence(startIndex.inc(), lastStartIndex.dec())
+                    text = string.subSequence(startIndex.inc(), endIndex.dec())
                     val element = Element.InlineCode(text)
                     parents.add(element)
                     lastStartIndex = endIndex
@@ -186,6 +188,21 @@ object MarkdownParser {
         }
 
         return parents
+    }
+
+    private fun Element.spread():List<Element>{
+        val elements = mutableListOf<Element>()
+        elements.add(this)
+        elements.addAll(this.elements.spread())
+        return elements
+    }
+
+    private fun List<Element>.spread():List<Element>{
+        val elements = mutableListOf<Element>()
+        if(this.isNotEmpty()) elements.addAll(
+            this.fold(mutableListOf()){acc, el -> acc.also { it.addAll(el.spread()) }}
+        )
+        return elements
     }
 }
 
@@ -260,4 +277,5 @@ sealed class Element() {
     ) : Element() {
         enum class Type { START, END, MIDDLE, SINGLE }
     }
+
 }

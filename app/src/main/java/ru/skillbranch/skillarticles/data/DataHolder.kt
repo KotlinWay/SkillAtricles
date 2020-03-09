@@ -48,6 +48,10 @@ object LocalDataHolder {
         Log.e("DataHolder", "update personal info: $info");
         articleInfo.value = info
     }
+
+    fun disableDelay(b: Boolean) {
+
+    }
 }
 
 object NetworkDataHolder {
@@ -58,6 +62,10 @@ object NetworkDataHolder {
             content.postValue(longText)
         }
         return content
+    }
+
+    fun disableDelay(b: Boolean) {
+
     }
 }
 
