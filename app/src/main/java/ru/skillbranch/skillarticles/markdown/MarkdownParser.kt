@@ -1,5 +1,6 @@
 package ru.skillbranch.skillarticles.markdown
 
+import android.util.Log
 import java.util.regex.Pattern
 
 object MarkdownParser {
@@ -11,7 +12,8 @@ object MarkdownParser {
     private const val HEADER_GROUP = "(^#{1,6} .+?$)"
     private const val QUOTE_GROUP = "(^> .+?$)"
     private const val ITALIC_GROUP = "((?<!\\*)\\*[^*].*?[^*]?\\*(?!\\*)|(?<!_)_[^_].*?[^_]?_(?!_))"
-    private const val BOLD_GROUP ="((?<!\\*)\\*{2}[^*].*?[^*]?\\*{2}(?!\\*)|(?<!_)_{2}[^_].*?[^_]?_{2}(?!_))"
+    private const val BOLD_GROUP =
+        "((?<!\\*)\\*{2}[^*].*?[^*]?\\*{2}(?!\\*)|(?<!_)_{2}[^_].*?[^_]?_{2}(?!_))"
     private const val STRIKE_GROUP = "((?<!\\~)\\~{2}[^\\~].*?[^\\~]?\\~{2}(?!\\~))"
     private const val RULE_GROUP = "(^[-_*]{3}$)"
     private const val INLINE_GROUP = "((?<!`)`[^`\\s].*?[^`\\s]?`(?!`))"
@@ -38,8 +40,14 @@ object MarkdownParser {
     /**
      * clear markdown text to string without markdown characters
      */
+
     fun clear(string: String?): String? {
-        return findElements(string.toString()).spread().joinToString()
+        val result = findElements(string ?: "").spread()
+        val resultString = StringBuilder()
+        result.forEach{
+            resultString.append(it.text)
+        }
+        return resultString.toString()
     }
 
     /**
@@ -55,17 +63,17 @@ object MarkdownParser {
 
             val startIndex = matcher.start()
             val endIndex = matcher.end()
-            if(lastStartIndex < startIndex){
+            if (lastStartIndex < startIndex) {
                 parents.add(Element.Text(string.subSequence(lastStartIndex, startIndex)))
             }
-            var text : CharSequence
+            var text: CharSequence
             //groups range for iterate by groups (1..9) or (1..11) optionally
             val groups = 1..11
             var group = -1
-            for(gr in groups){
+            for (gr in groups) {
 
                 val matcherGroup = matcher.group(gr)
-                if(matcherGroup != null){
+                if (matcherGroup != null) {
                     group = gr
                     break
                 }
@@ -163,7 +171,7 @@ object MarkdownParser {
                 9 -> {
                     //full text for regex
                     text = string.subSequence(startIndex, endIndex)
-                    val (title:String, link:String) = "\\[(.*)]\\((.*)\\)".toRegex().find(text)!!.destructured
+                    val (title: String, link: String) = "\\[(.*)]\\((.*)\\)".toRegex().find(text)!!.destructured
                     val element = Element.Link(link, title)
                     parents.add(element)
                     lastStartIndex = endIndex
@@ -182,7 +190,7 @@ object MarkdownParser {
         }
 
 
-        if(lastStartIndex < string.length){
+        if (lastStartIndex < string.length) {
             val text = string.subSequence(lastStartIndex, string.length)
             parents.add(Element.Text(text))
         }
@@ -190,17 +198,22 @@ object MarkdownParser {
         return parents
     }
 
-    private fun Element.spread():List<Element>{
+    private fun Element.spread(): List<Element> {
         val elements = mutableListOf<Element>()
-        elements.add(this)
-        elements.addAll(this.elements.spread())
+        if(this.elements.isEmpty()){
+            val add = elements.add(this)
+            val t =43
+        } else {
+            val addAll = elements.addAll(this.elements.spread())
+            val c =34
+        }
         return elements
     }
 
-    private fun List<Element>.spread():List<Element>{
+    private fun List<Element>.spread(): List<Element> {
         val elements = mutableListOf<Element>()
-        if(this.isNotEmpty()) elements.addAll(
-            this.fold(mutableListOf()){acc, el -> acc.also { it.addAll(el.spread()) }}
+        if (this.isNotEmpty()) elements.addAll(
+            this.fold(mutableListOf()) { acc, el -> acc.also { it.addAll(el.spread()) } }
         )
         return elements
     }
