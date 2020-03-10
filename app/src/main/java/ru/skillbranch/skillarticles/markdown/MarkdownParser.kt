@@ -201,11 +201,9 @@ object MarkdownParser {
     private fun Element.spread(): List<Element> {
         val elements = mutableListOf<Element>()
         if(this.elements.isEmpty()){
-            val add = elements.add(this)
-            val t =43
+            elements.add(this)
         } else {
-            val addAll = elements.addAll(this.elements.spread())
-            val c =34
+            elements.addAll(this.elements.spread())
         }
         return elements
     }
