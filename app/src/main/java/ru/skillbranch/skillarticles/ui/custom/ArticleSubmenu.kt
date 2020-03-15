@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewAnimationUtils
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -23,10 +22,6 @@ class ArticleSubmenu @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), CoordinatorLayout.AttachedBehavior {
     var isOpen = false
-    get() {
-        Log.wtf("ArticleSubmenu"," get field isOpen = $field ")
-        return field
-    }
     private var centerX: Float = context.dpToPx(200)
     private var centerY: Float = context.dpToPx(96)
 
@@ -44,15 +39,12 @@ class ArticleSubmenu @JvmOverloads constructor(
 
     fun open() {
         if (isOpen || !isAttachedToWindow) return
-        Log.wtf("ArticleSubmenu","open ")
         isOpen = true
         animatedShow()
     }
 
     fun close() {
-        Log.wtf("ArticleSubmenu","close $isOpen $isAttachedToWindow")
         if (!isOpen || !isAttachedToWindow) return
-        Log.wtf("ArticleSubmenu","close success")
         isOpen = false
         animatedHide()
     }
@@ -73,7 +65,6 @@ class ArticleSubmenu @JvmOverloads constructor(
     }
 
     private fun animatedHide() {
-        Log.wtf("ArticleSubmenu","animatedHide ")
         val endRadius = hypot(centerX, centerY).toInt()
         val anim = ViewAnimationUtils.createCircularReveal(
             this,

@@ -2,7 +2,6 @@ package ru.skillbranch.skillarticles.ui.custom.markdown
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.view.children
@@ -22,8 +21,8 @@ class MarkdownContentView @JvmOverloads constructor(
     //for restore
     private var ids = arrayListOf<Int>()
 
-    var textSize by Delegates.observable(14f){_, old, value ->
-        if(value == old) return@observable
+    var textSize by Delegates.observable(14f) { _, old, value ->
+        if (value == old) return@observable
         this.children.forEach {
             it as IMarkdownView
             it.fontSize = value
@@ -34,7 +33,7 @@ class MarkdownContentView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         var usedHeight = paddingTop
-        val width = View.getDefaultSize(suggestedMinimumWidth, widthMeasureSpec)
+        val width = getDefaultSize(suggestedMinimumWidth, widthMeasureSpec)
 
         children.forEach {
             measureChild(it, widthMeasureSpec, heightMeasureSpec)
@@ -53,11 +52,11 @@ class MarkdownContentView @JvmOverloads constructor(
         val right = paddingLeft + bodyWidth
 
         children.forEach {
-            if(it is MarkdownTextView) {
+            if (it is MarkdownTextView) {
                 it.layout(
-                    left - paddingLeft/2,
+                    left - paddingLeft / 2,
                     usedHeight,
-                    r - paddingRight/2,
+                    r - paddingRight / 2,
                     usedHeight + it.measuredHeight
                 )
             } else {
@@ -73,25 +72,28 @@ class MarkdownContentView @JvmOverloads constructor(
     }
 
     fun setContent(content: List<MarkdownElement>) {
-        elements = content 
-        content.forEach { 
-            when(it){
+        elements = content
+        content.forEach {
+            when (it) {
                 is MarkdownElement.Text -> {
-                    val tv = MarkdownTextView(context , textSize).apply { 
+                    val tv = MarkdownTextView(context, textSize).apply {
+
                         setPaddingOptionally(
                             left = padding,
                             right = padding
                         )
                         setLineSpacing(fontSize * 0.5f, 1f)
                     }
+
                     MarkdownBuilder(context)
                         .markdownToSpan(it)
-                        .run { 
+                        .run {
                             tv.setText(this, TextView.BufferType.SPANNABLE)
                         }
+
                     addView(tv)
                 }
-                
+
                 is MarkdownElement.Image -> {
                     val iv = MarkdownImageView(
                         context,
@@ -102,7 +104,7 @@ class MarkdownContentView @JvmOverloads constructor(
                     )
                     addView(iv)
                 }
-                
+
                 is MarkdownElement.Scroll -> {
                     val sv = MarkdownCodeView(
                         context,
@@ -116,35 +118,37 @@ class MarkdownContentView @JvmOverloads constructor(
     }
 
     fun renderSearchResult(searchResult: List<Pair<Int, Int>>) {
-        children.forEach {view ->
+        children.forEach { view ->
             view as IMarkdownView
             view.clearSearchResult()
         }
-        
-        if(searchResult.isEmpty()) return
-        
+
+        if (searchResult.isEmpty()) return
+
+
         val bounds = elements.map { it.bounds }
         val result = searchResult.groupByBounds(bounds)
 
         children.forEachIndexed { index, view ->
             view as IMarkdownView
             //search for child with markdown element offset
-            view.renderSearchResult(result[index],elements[index].offset)
+            view.renderSearchResult(result[index], elements[index].offset)
         }
     }
 
     fun renderSearchPosition(
         searchPosition: Pair<Int, Int>?
     ) {
-        searchPosition?: return
+        searchPosition ?: return
         val bounds = elements.map { it.bounds }
+
         val index = bounds.indexOfFirst { (start, end) ->
             val boundRange = start..end
             val (startPos, endPos) = searchPosition
             startPos in boundRange && endPos in boundRange
         }
 
-        if(index == -1 ) return
+        if (index == -1) return
         val view = getChildAt(index)
         view as IMarkdownView
         view.renderSearchPosition(searchPosition, elements[index].offset)
@@ -158,8 +162,6 @@ class MarkdownContentView @JvmOverloads constructor(
     }
 
     fun setCopyListener(listener: (String) -> Unit) {
-        children.filterIsInstance<MarkdownCodeView>()
-            .forEach { it.copyListener = listener }
+        children.filterIsInstance<MarkdownCodeView>().forEach { it.copyListener = listener }
     }
 }
-

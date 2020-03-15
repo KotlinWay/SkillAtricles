@@ -1,29 +1,18 @@
 package ru.skillbranch.skillarticles.extensions
 
 import android.content.Context
-import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.TypedValue
-import kotlin.math.hypot
-
-fun Context.attrValue(attr:Int): Int {
-    val tv = TypedValue()
-    return if(this.theme.resolveAttribute(attr, tv, true)) tv.data
-    else throw Resources.NotFoundException("Resource with id $attr not found")
-}
+import androidx.annotation.AttrRes
 
 fun Context.dpToPx(dp: Int): Float {
-
-
-
-
-
     return TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         dp.toFloat(),
         this.resources.displayMetrics
+
     )
 }
 
@@ -33,6 +22,16 @@ fun Context.dpToIntPx(dp: Int): Int {
         dp.toFloat(),
         this.resources.displayMetrics
     ).toInt()
+}
+
+fun Context.attrValue(@AttrRes id: Int): Int {
+    val value = TypedValue()
+    if (theme.resolveAttribute(id, value, true)) {
+        value.data
+        return value.data
+    } else {
+        error("can not attribute for : $id")
+    }
 }
 
 val Context.isNetworkAvailable: Boolean

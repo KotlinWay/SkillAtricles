@@ -7,18 +7,17 @@ import android.os.Bundle
 import android.text.Selection
 import android.text.Spannable
 import android.text.SpannableString
+import android.text.SpannedString
 import android.text.method.LinkMovementMethod
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
-
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.text.getSpans
-import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
@@ -46,10 +45,13 @@ import ru.skillbranch.skillarticles.viewmodels.base.ViewModelFactory
 
 class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
 
-    override val layout: Int = R.layout.activity_root
-    override val viewModel: ArticleViewModel by provideViewModel("0")
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    override val binding: ArticleBinding by lazy { ArticleBinding() }
+    public override val binding: ArticleBinding by lazy { ArticleBinding() }
+    override val layout: Int = R.layout.activity_root
+    override val viewModel: ArticleViewModel by lazy {
+        val vmFactory = ViewModelFactory("0")
+        ViewModelProviders.of(this, vmFactory).get(ArticleViewModel::class.java)
+    }
 
     override fun setupViews() {
         setupToolbar()
@@ -58,32 +60,28 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
     }
 
     override fun showSearchBar() {
-        bottomBar.setSearchState(true)
+        bottombar.setSearchState(true)
         scroll.setMarginOptionally(bottom = dpToIntPx(56))
     }
 
     override fun hideSearchBar() {
-        bottomBar.setSearchState(false)
+        bottombar.setSearchState(false)
         scroll.setMarginOptionally(bottom = dpToIntPx(0))
     }
 
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_search, menu)
-        val searchItem = menu?.findItem(R.id.action_search)
-        val searchView = (searchItem?.actionView as? SearchView)
-        searchView?.queryHint = getString(R.string.article_search_placeholder)
+        val menuItem = menu.findItem(R.id.action_search)
+        val searchView = menuItem.actionView as SearchView
+        searchView.queryHint = getString(R.string.article_search_placeholder)
 
-        if (binding.isSearch) {
-            searchItem?.expandActionView()
-            searchView?.setQuery(binding.searchQuery, false)
-
-            if (binding.isFocusedSearch) searchView?.requestFocus()
-            else searchView?.clearFocus()
+        if (binding.isSearching) {
+            menuItem.expandActionView()
+            searchView.setQuery(binding.searchQuery, false)
+            if (binding.isFocusedSearch) searchView.requestFocus() else searchView.clearFocus()
         }
 
-        searchItem?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
-
+        menuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 viewModel.handleSearchMode(true)
                 return true
@@ -95,43 +93,39 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
             }
         })
 
-        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 viewModel.handleSearch(query)
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                viewModel.handleSearch(query = newText)
+                viewModel.handleSearch(newText)
                 return true
             }
         })
+
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun renderNotification(notify: Notify) {
         val snackbar = Snackbar.make(coordinator_container, notify.message, Snackbar.LENGTH_LONG)
-            .setAnchorView(bottomBar)
-
+            .setAnchorView(bottombar)
+            .setActionTextColor(getColor(R.color.color_accent_dark))
 
         when (notify) {
+            is Notify.TextMessage -> { }
+
             is Notify.ActionMessage -> {
-                val(_, label, handler) = notify
-                with(snackbar){
-                    setActionTextColor(getColor(R.color.color_accent_dark))
-                    setAction(label){
-                        handler.invoke()
-                    }
-                }
+                snackbar.setAction(notify.actionLabel) { notify.actionHandler.invoke() }
             }
+
             is Notify.ErrorMessage -> {
-                val(_, label, handler) = notify
                 with(snackbar) {
                     setBackgroundTint(getColor(R.color.design_default_color_error))
                     setTextColor(getColor(android.R.color.white))
                     setActionTextColor(getColor(android.R.color.white))
-                    handler ?: return@with
-                    setAction(label){handler.invoke()}
+                    setAction(notify.errLabel) { notify.errHandler?.invoke() }
                 }
             }
         }
@@ -139,12 +133,31 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         snackbar.show()
     }
 
+    private fun setupToolbar() {
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // Задаем для логотипа некоторые надстройки
+        val logo = if (toolbar.childCount > 2) toolbar.getChildAt(2) as ImageView else null
+        logo?.scaleType = ImageView.ScaleType.CENTER_CROP
+        (logo?.layoutParams as? Toolbar.LayoutParams)?.let {
+            it.width = dpToIntPx(40)
+            it.height = dpToIntPx(40)
+            it.marginEnd = dpToIntPx(10)
+            logo.layoutParams = it
+        }
+    }
+
+    // Activity/Fragment получает информацию о том, что было совершено действие
+    // А затем поручает обработку ViewModel
     private fun setupSubmenu() {
         btn_text_up.setOnClickListener { viewModel.handleUpText() }
         btn_text_down.setOnClickListener { viewModel.handleDownText() }
         switch_mode.setOnClickListener { viewModel.handleNightMode() }
     }
 
+    // Activity/Fragment получает информацию о том, что было совершено действие
+    // А затем поручает обработку ViewModel
     private fun setupBottombar() {
         btn_like.setOnClickListener { viewModel.handleLike() }
         btn_bookmark.setOnClickListener { viewModel.handleBookmark() }
@@ -153,13 +166,13 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
 
         btn_result_up.setOnClickListener {
             if (search_view.hasFocus()) search_view.clearFocus()
-            if(!tv_text_content.hasFocus()) tv_text_content.requestFocus()
+            if (!tv_text_content.hasFocus()) tv_text_content.requestFocus()
             viewModel.handleUpResult()
         }
 
         btn_result_down.setOnClickListener {
             if (search_view.hasFocus()) search_view.clearFocus()
-            if(!tv_text_content.hasFocus()) tv_text_content.requestFocus()
+            if (!tv_text_content.hasFocus()) tv_text_content.requestFocus()
             viewModel.handleDownResult()
         }
 
@@ -169,33 +182,22 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         }
     }
 
-    private fun setupToolbar() {
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        val logo = if (toolbar.childCount > 2) toolbar.getChildAt(2) as ImageView else null
-        logo?.scaleType = ImageView.ScaleType.CENTER_CROP
-        (logo?.layoutParams as Toolbar.LayoutParams)?.let{
-            it.width = this.dpToIntPx(40)
-            it.height = this.dpToIntPx(40)
-            it.marginEnd = this.dpToIntPx(16)
-            logo.layoutParams = it
-        }
-    }
-
     private fun setupCopyListener(){
-        tv_text_content.setCopyListener{copy ->
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as  ClipboardManager
-            val clip = ClipData.newPlainText("Copied cod", copy)
+        tv_text_content.setCopyListener { copy ->
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Copied code", copy)
             clipboard.setPrimaryClip(clip)
-//            viewModel.handleCopyCode()
+            viewModel.handleCopyCode()
         }
     }
 
-    inner class ArticleBinding : Binding() {
-        var isFocusedSearch: Boolean = false
+    // inner - имеет доступ к полям и методам внешнего класса
+    inner class ArticleBinding: Binding() {
+        var isFocusedSearch = false
+        var isSearching = false
         var searchQuery: String? = null
 
-        private var isLoadingContent by ObserveProp(true)
+        private var isLoadingContent: Boolean by ObserveProp(true)
 
         private var isLike: Boolean by RenderProp(false) { btn_like.isChecked = it }
         private var isBookmark: Boolean by RenderProp(false) { btn_bookmark.isChecked = it }
@@ -203,11 +205,11 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
             btn_settings.isChecked = it
             if (it) submenu.open() else submenu.close()
         }
+
         private var title: String by RenderProp("loading") { toolbar.title = it }
         private var category: String by RenderProp("loading") { toolbar.subtitle = it }
-        private var categoryIcon: Int by RenderProp(R.drawable.logo_placeholder) {
-            toolbar.logo = getDrawable(it)
-        }
+        private var categoryIcon: Int by RenderProp(R.drawable.logo_placeholder) { toolbar.logo = getDrawable(it) }
+
         private var isBigText: Boolean by RenderProp(false) {
             if (it) {
                 tv_text_content.textSize = 18f
@@ -220,22 +222,21 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
             }
         }
 
-        private var isDarkMode: Boolean by RenderProp(false, false) {
+        private var isDarkMode: Boolean by RenderProp(false, needInit = false) {
             switch_mode.isChecked = it
-            delegate.localNightMode = if (it) AppCompatDelegate.MODE_NIGHT_YES
-            else AppCompatDelegate.MODE_NIGHT_NO
+            delegate.localNightMode = if (it) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         }
 
         var isSearch: Boolean by ObserveProp(false) {
-            if (it){
+            if (it) {
                 showSearchBar()
-                with(toolbar){
+                with(toolbar) {
                     (layoutParams as AppBarLayout.LayoutParams).scrollFlags =
                         AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
                 }
             } else {
                 hideSearchBar()
-                with(toolbar){
+                with(toolbar) {
                     (layoutParams as AppBarLayout.LayoutParams).scrollFlags =
                         AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
                                 AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED
@@ -245,10 +246,10 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
 
         private var searchResults: List<Pair<Int, Int>> by ObserveProp(emptyList())
         private var searchPosition: Int by ObserveProp(0)
+
         private var content: List<MarkdownElement> by ObserveProp(emptyList()) {
-            tv_text_content.isLoading = it.isEmpty()
             tv_text_content.setContent(it)
-            if(it.isNotEmpty()) setupCopyListener()
+            if (it.isNotEmpty()) setupCopyListener()
         }
 
         override fun onFinishInflate() {
@@ -257,33 +258,32 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
                 ::isSearch,
                 ::searchResults,
                 ::searchPosition
-            ) { ilc, iss, sr, sp ->
-                if (!ilc && iss) {
-                    tv_text_content.renderSearchResult(sr)
-                    tv_text_content.renderSearchPosition(sr.getOrNull(sp))
+            ) { isLoadingContent, isSearch, searchResults, searchPosition ->
+                if (!isLoadingContent && isSearch) {
+                    tv_text_content.renderSearchResult(searchResults)
+                    tv_text_content.renderSearchPosition(searchResults.getOrNull(searchPosition))
                 }
-
-                if (!ilc && !iss) {
+                if (!isLoadingContent && !isSearch) {
                     tv_text_content.clearSearchResult()
                 }
 
-                bottomBar.bindSearchInfo(sr.size, sp)
+                bottombar.bindSearchInfo(searchResults.size, searchPosition)
             }
         }
 
         override fun bind(data: IViewModelState) {
             data as ArticleState
-
             isLike = data.isLike
             isBookmark = data.isBookmark
             isShowMenu = data.isShowMenu
-            isBigText = data.isBigText
-            isDarkMode = data.isDarkMode
 
             if (data.title != null) title = data.title
             if (data.category != null) category = data.category
             if (data.categoryIcon != null) categoryIcon = data.categoryIcon as Int
             content = data.content
+
+            isBigText = data.isBigText
+            isDarkMode = data.isDarkMode
 
             isLoadingContent = data.isLoadingContent
             isSearch = data.isSearch
@@ -299,6 +299,5 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         override fun restoreUi(savedState: Bundle) {
             isFocusedSearch = savedState.getBoolean(::isFocusedSearch.name)
         }
-
     }
 }

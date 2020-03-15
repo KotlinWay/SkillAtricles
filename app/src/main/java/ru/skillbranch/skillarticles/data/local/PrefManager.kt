@@ -1,14 +1,13 @@
 package ru.skillbranch.skillarticles.data.local
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import ru.skillbranch.skillarticles.data.delegates.PrefDelegate
 
 class PrefManager(context: Context) {
-    internal val preferences : SharedPreferences by lazy { PreferenceManager(context).sharedPreferences }
+    val preferences: SharedPreferences by lazy { PreferenceManager(context).sharedPreferences }
 
     var storedBoolean by PrefDelegate(false)
     var storedString by PrefDelegate("test")
@@ -16,7 +15,7 @@ class PrefManager(context: Context) {
     var storedLong by PrefDelegate(Long.MAX_VALUE)
     var storedFloat by PrefDelegate(100f)
 
-    fun clearAll(){
+    fun clearAll() {
         preferences.edit().clear().apply()
     }
 }

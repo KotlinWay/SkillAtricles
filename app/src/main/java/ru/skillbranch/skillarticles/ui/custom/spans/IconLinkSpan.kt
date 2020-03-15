@@ -12,10 +12,8 @@ import androidx.annotation.VisibleForTesting
 
 class IconLinkSpan(
     private val linkDrawable: Drawable,
-    @Px
-    private val padding: Float,
-    @ColorInt
-    private val textColor: Int,
+    @Px private val padding: Float,
+    @ColorInt private val textColor: Int,
     dotWidth: Float = 6f
 ) : ReplacementSpan() {
 
@@ -24,6 +22,7 @@ class IconLinkSpan(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var textWidth = 0f
+
     private val dashs = DashPathEffect(floatArrayOf(dotWidth, dotWidth), 0f)
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -50,7 +49,7 @@ class IconLinkSpan(
 
         canvas.save()
         val trY = y + paint.descent() - linkDrawable.bounds.bottom
-        canvas.translate(x + padding/2f, trY )
+        canvas.translate(x + padding/2f, trY)
         linkDrawable.draw(canvas)
         canvas.restore()
 
@@ -58,7 +57,6 @@ class IconLinkSpan(
             canvas.drawText(text, start, end, textStart, y.toFloat(), paint)
         }
     }
-
 
     override fun getSize(
         paint: Paint,
@@ -68,22 +66,21 @@ class IconLinkSpan(
         fm: Paint.FontMetricsInt?
     ): Int {
         if (fm != null) {
-            iconSize = fm.descent - fm.ascent //fontSize
+            iconSize = fm.descent - fm.ascent // размер фонта
             linkDrawable.setBounds(0, 0, iconSize, iconSize)
         }
         textWidth = paint.measureText(text.toString(), start, end)
         return (iconSize + padding + textWidth).toInt()
     }
 
-
     private inline fun Paint.forLine(block: () -> Unit) {
         val oldColor = color
         val oldStyle = style
         val oldWidth = strokeWidth
 
-        pathEffect = dashs
+        pathEffect = dashs // прерывистая линия
         color = textColor
-        style = Paint.Style.STROKE
+        style = Paint.Style.STROKE // просто линия
         strokeWidth = 0f
 
         block()
@@ -95,8 +92,12 @@ class IconLinkSpan(
 
     private inline fun Paint.forText(block: () -> Unit) {
         val oldColor = color
+
         color = textColor
+
         block()
+
         color = oldColor
     }
+
 }

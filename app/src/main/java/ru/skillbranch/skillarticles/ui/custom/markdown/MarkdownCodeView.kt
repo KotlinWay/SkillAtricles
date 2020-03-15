@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Parcelable
 import android.text.Selection
 import android.text.Spannable
 import android.view.View
@@ -42,26 +43,21 @@ class MarkdownCodeView private constructor(
     //views
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val iv_copy: ImageView
-
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val iv_switch: ImageView
     private val tv_codeView: MarkdownTextView
-
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val sv_scroll: HorizontalScrollView
 
     //colors
     @ColorInt
     private val darkSurface: Int = context.attrValue(R.attr.darkSurfaceColor)
-
     @ColorInt
     private val darkOnSurface: Int = context.attrValue(R.attr.darkOnSurfaceColor)
-
     @ColorInt
     private val lightSurface: Int = context.attrValue(R.attr.lightSurfaceColor)
-
     @ColorInt
-    private val lightOnSurface: Int= context.attrValue(R.attr.lightOnSurfaceColor)
+    private val lightOnSurface: Int = context.attrValue(R.attr.lightOnSurfaceColor)
 
     //sizes
     private val iconSize = context.dpToIntPx(12)
@@ -76,18 +72,18 @@ class MarkdownCodeView private constructor(
     private var isDark = false
     private var isManual = false
     private val bgColor
-    get() = when{
-        !isManual -> context.attrValue(R.attr.colorSurface)
-        isDark -> darkSurface
-        else -> lightSurface
-    }
+        get() = when {
+            !isManual -> context.attrValue(R.attr.colorSurface)
+            isDark -> darkSurface
+            else -> lightSurface
+        }
 
     private val textColor
-    get() = when{
-        !isManual -> context.attrValue(R.attr.colorOnSurface)
-        isDark -> darkOnSurface
-        else -> lightOnSurface
-    }
+        get() = when {
+            !isManual -> context.attrValue(R.attr.colorOnSurface)
+            isDark -> darkOnSurface
+            else -> lightOnSurface
+        }
 
     init {
         tv_codeView = MarkdownTextView(context, fontSize * 0.85f).apply {
@@ -98,7 +94,7 @@ class MarkdownCodeView private constructor(
             isFocusableInTouchMode = true
         }
 
-        sv_scroll = object: HorizontalScrollView(context){
+        sv_scroll = object : HorizontalScrollView(context) {
             override fun getLeftFadingEdgeStrength(): Float {
                 return 0f
             }
@@ -107,6 +103,7 @@ class MarkdownCodeView private constructor(
             isHorizontalFadingEdgeEnabled = true
             scrollBarSize = scrollBarHeight
             setFadingEdgeLength(fadingOffset)
+            //add code text to scroll
             addView(tv_codeView)
         }
 
@@ -123,13 +120,11 @@ class MarkdownCodeView private constructor(
 
         iv_switch = ImageView(context).apply {
             setImageResource(R.drawable.ic_brightness_medium_black_24dp)
-                imageTintList = ColorStateList.valueOf(textColor)
+            imageTintList = ColorStateList.valueOf(textColor)
             setOnClickListener { toggleColors() }
         }
         addView(iv_switch)
     }
-
-
 
 
     constructor(
@@ -143,7 +138,7 @@ class MarkdownCodeView private constructor(
         setPadding(padding)
         background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadii = FloatArray(8).apply { fill(radius, 0 , size) }
+            cornerRadii = FloatArray(8).apply { fill(radius, 0, size) }
             color = ColorStateList.valueOf(bgColor)
         }
     }
@@ -151,7 +146,7 @@ class MarkdownCodeView private constructor(
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     public override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         var usedHeight = 0
-        val width = View.getDefaultSize(suggestedMinimumWidth, widthMeasureSpec)
+        val width = getDefaultSize(suggestedMinimumWidth, widthMeasureSpec)
         measureChild(sv_scroll, widthMeasureSpec, heightMeasureSpec)
         measureChild(iv_copy, widthMeasureSpec, heightMeasureSpec)
 
@@ -161,13 +156,15 @@ class MarkdownCodeView private constructor(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     public override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        println("l: $l, t: $t, r: $r, b: $b")
         val usedHeight = paddingTop
         val bodyWidth = r - l - paddingLeft - paddingRight
         val left = paddingLeft
         val right = paddingLeft + bodyWidth
 
-        if(isSingleLine) {
+        if (isSingleLine) {
             val iconHeight = (b - t - iconSize) / 2
+
             iv_copy.layout(
                 right - iconSize,
                 iconHeight,
@@ -181,6 +178,7 @@ class MarkdownCodeView private constructor(
                 iv_copy.right - (1.5f*iconSize).toInt(),
                 iconHeight + iconSize
             )
+
         } else {
             iv_copy.layout(
                 right - iconSize,
@@ -216,6 +214,7 @@ class MarkdownCodeView private constructor(
         isDark = !isDark
         applyColors()
     }
+
 
     private fun applyColors() {
         iv_switch.imageTintList = ColorStateList.valueOf(textColor)
