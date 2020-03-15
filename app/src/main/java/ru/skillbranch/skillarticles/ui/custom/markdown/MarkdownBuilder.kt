@@ -10,9 +10,8 @@ import android.text.style.URLSpan
 import androidx.core.text.buildSpannedString
 import androidx.core.text.inSpans
 import ru.skillbranch.skillarticles.R
-import ru.skillbranch.skillarticles.data.Element
-import ru.skillbranch.skillarticles.data.MarkdownElement
-import ru.skillbranch.skillarticles.data.MarkdownParser
+import ru.skillbranch.skillarticles.data.repositories.Element
+import ru.skillbranch.skillarticles.data.repositories.MarkdownElement
 import ru.skillbranch.skillarticles.extensions.attrValue
 import ru.skillbranch.skillarticles.extensions.dpToPx
 import ru.skillbranch.skillarticles.ui.custom.spans.*
@@ -23,6 +22,7 @@ class MarkdownBuilder(context: Context) {
     private val colorDivider = context.getColor(R.color.color_divider)
     private val colorOnSurface = context.attrValue(R.attr.colorOnSurface)
     private val colorSurface = context.attrValue(R.attr.colorSurface)
+    private val opacityColorSurface = context.getColor(R.color.opacity_color_surface)
     private val gap: Float = context.dpToPx(8)
     private val bulletRadius = context.dpToPx(4)
     private val strikeWidth = context.dpToPx(4)
@@ -107,16 +107,24 @@ class MarkdownBuilder(context: Context) {
                 }
 
                 is Element.InlineCode -> {
-                    inSpans(InlineCodeSpan(colorOnSurface, colorSurface, cornerRadius, gap)){
+                    inSpans(InlineCodeSpan(colorOnSurface, opacityColorSurface, cornerRadius, gap)){
                         append(element.text)
                     }
                 }
 
                 is Element.Link -> {
-                    inSpans(IconLinkSpan(linkIcon, colorSecondary, gap, colorPrimary, strikeWidth),
+                    inSpans(IconLinkSpan(linkIcon, gap, colorPrimary, strikeWidth),
                         URLSpan(element.link)
                     ){
                         append(element.text)
+                    }
+                }
+
+                is Element.OrderedListItem -> {
+                    inSpans(OrderedListSpan(gap, element.order, colorPrimary)){
+                        for(child in element.elements){
+                            buildElement(child, builder)
+                        }
                     }
                 }
 

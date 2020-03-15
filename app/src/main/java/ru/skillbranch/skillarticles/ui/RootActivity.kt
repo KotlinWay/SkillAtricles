@@ -1,5 +1,8 @@
 package ru.skillbranch.skillarticles.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.text.Selection
 import android.text.Spannable
@@ -17,12 +20,14 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.text.getSpans
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_root.*
 import kotlinx.android.synthetic.main.layout_bottombar.*
 import kotlinx.android.synthetic.main.layout_submenu.*
 import kotlinx.android.synthetic.main.search_view_layout.*
 import ru.skillbranch.skillarticles.R
+import ru.skillbranch.skillarticles.data.repositories.MarkdownElement
 import ru.skillbranch.skillarticles.extensions.dpToIntPx
 import ru.skillbranch.skillarticles.extensions.setMarginOptionally
 import ru.skillbranch.skillarticles.ui.custom.markdown.MarkdownBuilder
@@ -42,75 +47,14 @@ import ru.skillbranch.skillarticles.viewmodels.base.ViewModelFactory
 class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
 
     override val layout: Int = R.layout.activity_root
-//    override val viewModel: ArticleViewModel by ViewModelDelegate(ArticleViewModel::class.java,"0")
-    override val viewModel: ArticleViewModel by lazy {
-        val vmFactory = ViewModelFactory("0")
-        ViewModelProviders.of(this, vmFactory).get(ArticleViewModel::class.java)
-    }
+    override val viewModel: ArticleViewModel by provideViewModel("0")
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     override val binding: ArticleBinding by lazy { ArticleBinding() }
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    val bgColor by AttrValue(R.attr.colorSecondary)
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    val fgColor by AttrValue(R.attr.colorOnSecondary)
-
 
     override fun setupViews() {
         setupToolbar()
         setupBottombar()
         setupSubmenu()
-    }
-
-    override fun renderSearchResult(searchResult: List<Pair<Int, Int>>) {
-        val content = tv_text_content.text as Spannable
-        tv_text_content.isVisible
-        //clear entry search result
-        clearSearchResult()
-
-        searchResult.forEach { (start, end) ->
-            content.setSpan(
-                SearchSpan(
-                    bgColor,
-                    fgColor
-                ),
-                start,
-                end,
-                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
-
-    }
-
-    override fun renderSearchPosition(searchPosition: Int) {
-        val content = tv_text_content.text as Spannable
-
-        val spans = content.getSpans<SearchSpan>()
-        content.getSpans<SearchFocusSpan>().forEach { content.removeSpan(it) }
-        if (spans.isNotEmpty()) {
-            val result = spans[searchPosition]
-//            val result = if(searchPosition > spans.size-1) {
-//                spans[searchPosition.dec()]
-//            } else {
-//                spans[searchPosition]
-//            }
-            Selection.setSelection(content, content.getSpanStart(result))
-            content.setSpan(
-                SearchFocusSpan(
-                    bgColor,
-                    fgColor
-                ),
-                content.getSpanStart(result),
-                content.getSpanEnd(result),
-                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
-
-    }
-
-    override fun clearSearchResult() {
-        val content = tv_text_content.text as Spannable
-        content.getSpans<SearchSpan>()
-            .forEach { content.removeSpan(it) }
     }
 
     override fun showSearchBar() {
@@ -125,7 +69,7 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu, menu)
+        menuInflater.inflate(R.menu.menu_search, menu)
         val searchItem = menu?.findItem(R.id.action_search)
         val searchView = (searchItem?.actionView as? SearchView)
         searchView?.queryHint = getString(R.string.article_search_placeholder)
@@ -238,6 +182,15 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         }
     }
 
+    private fun setupCopyListener(){
+        tv_text_content.setCopyListener{copy ->
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as  ClipboardManager
+            val clip = ClipData.newPlainText("Copied cod", copy)
+            clipboard.setPrimaryClip(clip)
+//            viewModel.handleCopyCode()
+        }
+    }
+
     inner class ArticleBinding : Binding() {
         var isFocusedSearch: Boolean = false
         var searchQuery: String? = null
@@ -274,18 +227,28 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
         }
 
         var isSearch: Boolean by ObserveProp(false) {
-            if (it) showSearchBar() else hideSearchBar()
+            if (it){
+                showSearchBar()
+                with(toolbar){
+                    (layoutParams as AppBarLayout.LayoutParams).scrollFlags =
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
+                }
+            } else {
+                hideSearchBar()
+                with(toolbar){
+                    (layoutParams as AppBarLayout.LayoutParams).scrollFlags =
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
+                                AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED
+                }
+            }
         }
 
         private var searchResults: List<Pair<Int, Int>> by ObserveProp(emptyList())
         private var searchPosition: Int by ObserveProp(0)
-        private var content: String by ObserveProp("loading") {
-            MarkdownBuilder(this@RootActivity)
-                .markdownToSpan(it)
-                .run {
-                    tv_text_content.setText(this, TextView.BufferType.SPANNABLE)
-                }
-            tv_text_content.movementMethod = LinkMovementMethod.getInstance()
+        private var content: List<MarkdownElement> by ObserveProp(emptyList()) {
+            tv_text_content.isLoading = it.isEmpty()
+            tv_text_content.setContent(it)
+            if(it.isNotEmpty()) setupCopyListener()
         }
 
         override fun onFinishInflate() {
@@ -296,12 +259,12 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
                 ::searchPosition
             ) { ilc, iss, sr, sp ->
                 if (!ilc && iss) {
-                    renderSearchResult(sr)
-                    renderSearchPosition(sp)
+                    tv_text_content.renderSearchResult(sr)
+                    tv_text_content.renderSearchPosition(sr.getOrNull(sp))
                 }
 
                 if (!ilc && !iss) {
-                    clearSearchResult()
+                    tv_text_content.clearSearchResult()
                 }
 
                 bottomBar.bindSearchInfo(sr.size, sp)
@@ -320,7 +283,7 @@ class RootActivity : BaseActivity<ArticleViewModel>(), IArticleView {
             if (data.title != null) title = data.title
             if (data.category != null) category = data.category
             if (data.categoryIcon != null) categoryIcon = data.categoryIcon as Int
-            if (data.content != null) content = data.content
+            content = data.content
 
             isLoadingContent = data.isLoadingContent
             isSearch = data.isSearch

@@ -9,12 +9,6 @@ import androidx.core.view.marginTop
 
 fun View.setMarginOptionally(left:Int = marginLeft, top:Int = marginTop, right:Int = marginRight, bottom:Int = marginBottom){
     (layoutParams as ViewGroup.MarginLayoutParams).apply {
-//        setMargins(
-//            context.dpToIntPx(left),
-//            context.dpToIntPx(top),
-//            context.dpToIntPx(right),
-//            context.dpToIntPx(bottom)
-//        )
         setMargins(
             left,
             top,
@@ -25,7 +19,7 @@ fun View.setMarginOptionally(left:Int = marginLeft, top:Int = marginTop, right:I
 }
 
 fun View.setPaddingOptionally(left:Int = paddingLeft, top:Int = paddingTop, right:Int = paddingRight, bottom:Int = paddingBottom){
-    (layoutParams as ViewGroup.MarginLayoutParams).apply {
+    (layoutParams as? ViewGroup.LayoutParams)?.apply {
         setPadding(
             left,
             top,
