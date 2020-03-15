@@ -125,7 +125,6 @@ class MarkdownContentView @JvmOverloads constructor(
 
         if (searchResult.isEmpty()) return
 
-
         val bounds = elements.map { it.bounds }
         val result = searchResult.groupByBounds(bounds)
 
