@@ -10,12 +10,15 @@ import androidx.annotation.Px
 import androidx.annotation.VisibleForTesting
 
 class InlineCodeSpan(
-    @ColorInt private val textColor: Int,
-    @ColorInt private val bgColor: Int,
-    @Px private val cornerRadius: Float,
-    @Px private val padding: Float
+    @ColorInt
+    private val textColor: Int,
+    @ColorInt
+    private val bgColor: Int,
+    @Px
+    private val cornerRadius: Float,
+    @Px
+    private val padding: Float
 ) : ReplacementSpan() {
-
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var rect: RectF = RectF()
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -31,7 +34,7 @@ class InlineCodeSpan(
     ): Int {
         bounds = start..end
         paint.forText {
-            val measureText = paint.measureText(text.toString(), start, end) // ширина текста
+            val measureText = paint.measureText(text.toString(), start, end)
             measureWidth = (measureText + 2 * padding).toInt()
         }
         return measureWidth
