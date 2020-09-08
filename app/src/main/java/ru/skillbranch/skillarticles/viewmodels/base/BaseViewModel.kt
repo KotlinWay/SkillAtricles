@@ -7,12 +7,10 @@ import androidx.lifecycle.*
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 
-abstract class BaseViewModel<T : IViewModelState>(
-    private val handleState: SavedStateHandle,
-    initState: T
-) : ViewModel() {
+abstract class BaseViewModel<T : IViewModelState>(private val handleState: SavedStateHandle, initState: T) : ViewModel() {
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val notifications = MutableLiveData<Event<Notify>>()
+
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val navigation = MutableLiveData<Event<NavigationCommand>>()
 
@@ -54,8 +52,8 @@ abstract class BaseViewModel<T : IViewModelState>(
         notifications.value = Event(content)
     }
 
-    open fun navigate(command:NavigationCommand){
-        navigation.value = Event(command)
+    open fun navigate(navigationCommand: NavigationCommand) {
+        navigation.value = Event(navigationCommand)
     }
 
     /***
@@ -72,13 +70,11 @@ abstract class BaseViewModel<T : IViewModelState>(
      * реализует данное поведение с помощью EventObserver
      */
     fun observeNotifications(owner: LifecycleOwner, onNotify: (notification: Notify) -> Unit) {
-        notifications.observe(owner,
-            EventObserver { onNotify(it) })
+        notifications.observe(owner, EventObserver { onNotify(it) })
     }
 
-    fun observeNavigation(owner: LifecycleOwner, onNavigate: (command: NavigationCommand) -> Unit){
-        navigation.observe(owner,
-            EventObserver { onNavigate(it) })
+    fun observeNavigation(owner: LifecycleOwner, onNavigate: (navigationCommand: NavigationCommand) -> Unit) {
+        navigation.observe(owner, EventObserver { onNavigate(it) })
     }
 
     /***
@@ -95,12 +91,12 @@ abstract class BaseViewModel<T : IViewModelState>(
         }
     }
 
-    fun saveState() {
+    fun saveState(){
         currentState.save(handleState)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun restoreState() {
+    fun restoreState(){
         state.value = currentState.restore(handleState) as T
     }
 
@@ -138,7 +134,7 @@ class EventObserver<E>(private val onEventUnhandledContent: (E) -> Unit) : Obser
     }
 }
 
-sealed class Notify() {
+sealed class Notify {
     abstract val message: String
 
     data class TextMessage(override val message: String) : Notify()
@@ -156,13 +152,13 @@ sealed class Notify() {
     ) : Notify()
 }
 
-sealed class NavigationCommand() {
+sealed class NavigationCommand {
     data class To(
-        val destination:Int,
+        val destination: Int,
         val args: Bundle? = null,
         val options: NavOptions? = null,
         val extras: Navigator.Extras? = null
-    ) : NavigationCommand()
+    ): NavigationCommand()
 
     data class StartLogin(
         val privateDestination: Int? = null

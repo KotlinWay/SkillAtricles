@@ -16,6 +16,8 @@ import ru.skillbranch.skillarticles.ui.custom.spans.HeaderSpan
 import ru.skillbranch.skillarticles.ui.custom.spans.SearchFocusSpan
 import ru.skillbranch.skillarticles.ui.custom.spans.SearchSpan
 
+// Отрисовка фона под TextView
+// https://prnt.sc/rdf4xv
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 class SearchBgHelper constructor(
     context: Context,
@@ -81,7 +83,6 @@ class SearchBgHelper constructor(
     }
 
     private lateinit var render: SearchBgRender
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     private val singleLineRender: SearchBgRender =
         SingleLineRender(
             padding, drawable
@@ -110,7 +111,6 @@ class SearchBgHelper constructor(
     private var bottomExtraPadding = 0
 
     fun draw(canvas: Canvas, text: Spanned, layout: Layout) {
-//        println(drawable)
         spans = text.getSpans()
         spans.forEach {
             spanStart = text.getSpanStart(it)
@@ -143,12 +143,8 @@ class SearchBgHelper constructor(
 
             startOffset = layout.getPrimaryHorizontal(spanStart).toInt()
             endOffset = layout.getPrimaryHorizontal(spanEnd).toInt()
-            println(singleLineRender)
-            println(multiLineRender)
             render = if (startLine == endLine) singleLineRender else multiLineRender
-            println(render)
 
-//            println("draw $drawable")
             render.draw(
                 canvas,
                 layout,
@@ -164,9 +160,7 @@ class SearchBgHelper constructor(
 }
 
 
-abstract class SearchBgRender(
-    val padding: Int
-) {
+abstract class SearchBgRender(val padding: Int) {
     abstract fun draw(
         canvas: Canvas,
         layout: Layout,
@@ -187,14 +181,7 @@ abstract class SearchBgRender(
     }
 }
 
-class SingleLineRender(
-    padding: Int,
-    val drawable: Drawable
-) : SearchBgRender(padding) {
-    init {
-//        println("single line init $drawable")
-    }
-
+class SingleLineRender(padding: Int, val drawable: Drawable) : SearchBgRender(padding) {
     private var lineTop: Int = 0
     private var lineBottom: Int = 0
 
@@ -210,14 +197,9 @@ class SingleLineRender(
     ) {
         lineTop = getLineTop(layout, startLine) + topExtraPadding
         lineBottom = getLineBottom(layout, startLine) - bottomExtraPadding
-//        println("SingleLineRender $drawable")
-        val l = startOffset - padding
-        val r = endOffset + padding
-        println("left: $l, top: $lineTop, right: $r, bottom : $lineBottom")
         drawable.setBounds(startOffset - padding, lineTop, endOffset + padding, lineBottom)
         drawable.draw(canvas)
     }
-
 }
 
 class MultiLineRender(
@@ -241,9 +223,6 @@ class MultiLineRender(
         topExtraPadding: Int,
         bottomExtraPadding: Int
     ) {
-        //draw first line
-        val lr = layout.getLineRight(startLine)
-        val ll = layout.getLineLeft(startLine)
         lineEndOffset = (layout.getLineRight(startLine) + padding).toInt()
         lineTop = getLineTop(layout, startLine) + topExtraPadding
         lineBottom = getLineBottom(layout, startLine)
@@ -253,9 +232,6 @@ class MultiLineRender(
         for (line in startLine.inc() until endLine) {
             lineTop = getLineTop(layout, line)
             lineBottom = getLineBottom(layout, line)
-            val l = line
-            val ll = layout.getLineLeft(line)
-            val lr = layout.getLineRight(line)
             drawableMiddle.setBounds(
                 layout.getLineLeft(line).toInt() - padding,
                 lineTop,
@@ -265,9 +241,6 @@ class MultiLineRender(
             drawableMiddle.draw(canvas)
         }
 
-
-        //draw last line
-        val lle = layout.getLineLeft(endLine)
         lineStartOffset = (layout.getLineLeft(endLine) - padding).toInt()
         lineTop = getLineTop(layout, endLine)
         lineBottom = getLineBottom(layout, endLine) - bottomExtraPadding

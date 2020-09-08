@@ -32,7 +32,6 @@ class MarkdownContentView @JvmOverloads constructor(
             it.fontSize = value
         }
     }
-    var isLoading: Boolean = true
     val padding = context.dpToIntPx(8)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -134,7 +133,6 @@ class MarkdownContentView @JvmOverloads constructor(
 
         if (searchResult.isEmpty()) return
 
-
         val bounds = elements.map { it.bounds }
         val result = searchResult.groupByBounds(bounds)
 
@@ -145,9 +143,7 @@ class MarkdownContentView @JvmOverloads constructor(
         }
     }
 
-    fun renderSearchPosition(
-        searchPosition: Pair<Int, Int>?
-    ) {
+    fun renderSearchPosition(searchPosition: Pair<Int, Int>?) {
         searchPosition ?: return
         val bounds = elements.map { it.bounds }
 
@@ -171,7 +167,8 @@ class MarkdownContentView @JvmOverloads constructor(
     }
 
     fun setCopyListener(listener: (String) -> Unit) {
-        children.filterIsInstance<MarkdownCodeView>()
+        children
+            .filterIsInstance<MarkdownCodeView>()
             .forEach { it.copyListener = listener }
     }
 
@@ -188,8 +185,10 @@ class MarkdownContentView @JvmOverloads constructor(
 
     override fun dispatchSaveInstanceState(container: SparseArray<Parcelable>?) {
         //save children manually without markdown text view
-        children.filter { it !is MarkdownTextView }
+        children
+            .filter { it !is MarkdownTextView }
             .forEach { it.saveHierarchyState(layoutManager.container) }
+
         //save only markdownContentView
         dispatchFreezeSelfOnly(container)
     }
@@ -199,9 +198,8 @@ class MarkdownContentView @JvmOverloads constructor(
         var container: SparseArray<Parcelable> = SparseArray()
 
         constructor(parcel: Parcel) : this() {
-            ids = parcel.readArrayList(Int::class.java.classLoader) as ArrayList<Int>
-            container =
-                parcel.readSparseArray<Parcelable>(this::class.java.classLoader) as SparseArray<Parcelable>
+            ids  = parcel.createIntArray()!!.toMutableList()
+            container = parcel.readSparseArray<Parcelable>(this::class.java.classLoader) as SparseArray<Parcelable>
         }
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -224,7 +222,6 @@ class MarkdownContentView @JvmOverloads constructor(
         companion object CREATOR : Parcelable.Creator<LayoutManager> {
             override fun createFromParcel(parcel: Parcel): LayoutManager = LayoutManager(parcel)
             override fun newArray(size: Int): Array<LayoutManager?> = arrayOfNulls(size)
-
         }
     }
 
@@ -249,7 +246,6 @@ class MarkdownContentView @JvmOverloads constructor(
 
         companion object CREATOR : Parcelable.Creator<SavedState> {
             override fun createFromParcel(parcel: Parcel) = SavedState(parcel)
-
             override fun newArray(size: Int): Array<SavedState?> = arrayOfNulls(size)
         }
     }
